@@ -1,25 +1,595 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>Todo Manager</title>
 
     <style>
-        body {
-            background: #09090b;
-            color: #fafafa;
-            font-family: Arial, sans-serif;
-            padding: 30px;
+        :root {
+            color-scheme: dark;
+            --bg: #09090b;
+            --card: #111114;
+            --border: #27272a;
+            --text: #fafafa;
+            --muted: #a1a1aa;
+            --purple: #8b5cf6;
+            --green: #4ade80;
+            --red: #fb7185;
+            --yellow: #fbbf24;
         }
 
-        p {
-            color: #a1a1aa;
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 35px 16px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, sans-serif;
+        }
+
+        button, input, textarea, select { font: inherit; }
+
+        button { cursor: pointer; }
+
+        .container { max-width: 900px; margin: auto; }
+
+        header { margin-bottom: 28px; }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: clamp(28px, 5vw, 38px);
+        }
+
+        header p, .muted { color: var(--muted); }
+
+        .panel {
+            padding: 24px;
+            margin-bottom: 22px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .panel h2 { margin: 0 0 20px; font-size: 20px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .field { display: grid; gap: 8px; }
+
+        .field.full { grid-column: 1 / -1; }
+
+        label { color: #d4d4d8; font-size: 13px; }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            color: var(--text);
+            background: #09090b;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--purple);
+        }
+
+        textarea { min-height: 95px; resize: vertical; }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #202024;
+            color: var(--text);
+        }
+
+        .btn-primary {
+            background: var(--purple);
+            border-color: var(--purple);
+        }
+
+        .btn-danger { color: var(--red); }
+
+        .btn-small { padding: 7px 10px; font-size: 12px; }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .toolbar h2 { margin: 0; }
+
+        .toolbar input { max-width: 270px; }
+
+        #todoList { display: grid; gap: 13px; }
+
+        .todo {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: #0d0d10;
+        }
+
+        .todo-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .todo h3 { margin: 0 0 7px; overflow-wrap: anywhere; }
+
+        .todo-description {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .status {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            background: #27272a;
+            color: #d4d4d8;
+            font-size: 11px;
+        }
+
+        .status.completed { color: var(--green); }
+        .status.in_progress { color: var(--yellow); }
+
+        .todo-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 13px;
+            border-top: 1px solid var(--border);
+        }
+
+        .todo-footer select { width: auto; max-width: 160px; padding: 8px; }
+
+        .todo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .message {
+            display: none;
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .message.show { display: block; }
+        .message.success { color: var(--green); }
+        .message.error { color: var(--red); }
+
+        .empty, .loading {
+            padding: 35px 10px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .meta { color: var(--muted); font-size: 12px; }
+
+        @media (max-width: 600px) {
+            body { padding: 24px 12px; }
+            .panel { padding: 17px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .field.full { grid-column: auto; }
+            .todo-top { flex-direction: column; }
+            .toolbar { align-items: stretch; }
+            .toolbar input { max-width: none; }
         }
     </style>
 </head>
+
 <body>
-    <h1><%= message %></h1>
-    <p>Username: <%= username %></p>
+<main class="container">
+    <header>
+        <h1>Todo Manager</h1>
+        <p>Create, view, update and delete your tasks using REST APIs.</p>
+    </header>
+
+    <div id="message" class="message" role="status" aria-live="polite"></div>
+
+    <!-- Create / Update Form -->
+    <section class="panel">
+        <h2 id="formHeading">Create Todo</h2>
+
+        <form id="todoForm">
+            <input type="hidden" id="todoId">
+
+            <div class="form-grid">
+                <div class="field full">
+                    <label for="title">Title *</label>
+                    <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        maxlength="255"
+                        placeholder="What do you need to do?"
+                        required
+                    >
+                </div>
+
+                <div class="field full">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        placeholder="Add some details (optional)"
+                    ></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="submitBtn" type="submit">
+                    Create Todo
+                </button>
+                <button class="btn" id="cancelBtn" type="button" hidden>
+                    Cancel Edit
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Read Todos -->
+    <section class="panel">
+        <div class="toolbar">
+            <h2>Your Todos</h2>
+            <input id="search" type="search" placeholder="Search loaded todos...">
+        </div>
+
+        <div class="toolbar">
+            <span id="todoCount" class="meta">Loading todos...</span>
+            <button class="btn" id="refreshBtn" type="button">↻ Refresh</button>
+        </div>
+
+        <div id="todoList">
+            <div class="loading">Loading todos...</div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const API_URL = "/api/todos";
+
+    const form = document.getElementById("todoForm");
+    const todoIdInput = document.getElementById("todoId");
+    const titleInput = document.getElementById("title");
+    const descriptionInput = document.getElementById("description");
+    const statusInput = document.getElementById("status");
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const formHeading = document.getElementById("formHeading");
+    const todoList = document.getElementById("todoList");
+    const todoCount = document.getElementById("todoCount");
+    const searchInput = document.getElementById("search");
+    const messageBox = document.getElementById("message");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    let todos = [];
+    let messageTimer;
+
+    function showMessage(text, type = "success") {
+        clearTimeout(messageTimer);
+        messageBox.textContent = text;
+        messageBox.className = `message show ${type}`;
+
+        messageTimer = setTimeout(() => {
+            messageBox.className = "message";
+        }, 4000);
+    }
+
+    async function apiRequest(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...(options.body ? { "Content-Type": "application/json" } : {}),
+                ...options.headers,
+            },
+        });
+
+        const text = await response.text();
+        let result = {};
+
+        if (text) {
+            try {
+                result = JSON.parse(text);
+            } catch {
+                throw new Error("Server returned an invalid response.");
+            }
+        }
+
+        if (!response.ok || result.success === false) {
+            throw new Error(result.message || `Request failed (${response.status}).`);
+        }
+
+        return result;
+    }
+
+    function getTodoArray(result) {
+        // Supports either { success, data: [...] } or a direct array.
+        if (Array.isArray(result)) return result;
+        if (Array.isArray(result.data)) return result.data;
+
+        // Supports { data: { todos: [...] } } response structures too.
+        if (Array.isArray(result.data?.todos)) return result.data.todos;
+
+        throw new Error(
+            "Unexpected todos response. Check the GET /api/todos response format."
+        );
+    }
+
+    function resetForm() {
+        form.reset();
+        todoIdInput.value = "";
+        statusInput.value = "pending";
+        formHeading.textContent = "Create Todo";
+        submitBtn.textContent = "Create Todo";
+        cancelBtn.hidden = true;
+    }
+
+    function editTodo(id) {
+        const todo = todos.find((item) => String(item.id) === String(id));
+
+        if (!todo) {
+            showMessage("Todo not found in the loaded list. Refresh and try again.", "error");
+            return;
+        }
+
+        todoIdInput.value = todo.id;
+        titleInput.value = todo.title ?? "";
+        descriptionInput.value = todo.description ?? "";
+        statusInput.value = todo.status ?? "pending";
+
+        formHeading.textContent = "Update Todo";
+        submitBtn.textContent = "Save Changes";
+        cancelBtn.hidden = false;
+
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+        titleInput.focus({ preventScroll: true });
+    }
+
+    function createElement(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined) element.textContent = text;
+        return element;
+    }
+
+    function renderTodos() {
+        const query = searchInput.value.trim().toLowerCase();
+
+        const filtered = todos.filter((todo) => {
+            const text = `${todo.title ?? ""} ${todo.description ?? ""}`.toLowerCase();
+            return text.includes(query);
+        });
+
+        todoCount.textContent =
+            `${filtered.length} todo${filtered.length === 1 ? "" : "s"}` +
+            (query ? " found" : "");
+
+        todoList.replaceChildren();
+
+        if (filtered.length === 0) {
+            todoList.appendChild(
+                createElement(
+                    "div",
+                    "empty",
+                    query ? "No matching todos found." : "No todos yet. Create your first task above."
+                )
+            );
+            return;
+        }
+
+        for (const todo of filtered) {
+            const card = createElement("article", "todo");
+            const top = createElement("div", "todo-top");
+            const content = createElement("div");
+            const title = createElement("h3", "", todo.title);
+            const description = createElement(
+                "p",
+                "todo-description",
+                todo.description || "No description"
+            );
+
+            const status = createElement(
+                "span",
+                `status ${todo.status === "completed" ? "completed" : todo.status === "in_progress" ? "in_progress" : ""}`,
+                (todo.status || "pending").replaceAll("_", " ")
+            );
+
+            title.id = `todo-title-${todo.id}`;
+            content.append(title, description, status);
+
+            const idLabel = createElement("span", "meta", `ID: ${todo.id}`);
+            top.append(content, idLabel);
+
+            const footer = createElement("div", "todo-footer");
+            const statusSelect = document.createElement("select");
+            statusSelect.setAttribute("aria-label", `Change status for todo ${todo.id}`);
+
+            for (const [value, label] of [
+                ["pending", "Pending"],
+                ["in_progress", "In Progress"],
+                ["completed", "Completed"],
+            ]) {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = label;
+                option.selected = (todo.status || "pending") === value;
+                statusSelect.appendChild(option);
+            }
+
+            statusSelect.addEventListener("change", () => {
+                updateStatus(todo.id, statusSelect.value, statusSelect);
+            });
+
+            const actions = createElement("div", "todo-actions");
+
+            const editBtn = createElement("button", "btn btn-small", "Edit");
+            editBtn.type = "button";
+            editBtn.addEventListener("click", () => editTodo(todo.id));
+
+            const deleteBtn = createElement("button", "btn btn-small btn-danger", "Delete");
+            deleteBtn.type = "button";
+            deleteBtn.addEventListener("click", () => deleteTodo(todo.id));
+
+            actions.append(editBtn, deleteBtn);
+            footer.append(statusSelect, actions);
+            card.append(top, footer);
+            todoList.appendChild(card);
+        }
+    }
+
+    async function loadTodos() {
+        refreshBtn.disabled = true;
+        todoCount.textContent = "Loading todos...";
+        todoList.replaceChildren(createElement("div", "loading", "Loading todos..."));
+
+        try {
+            const result = await apiRequest(API_URL);
+            todos = getTodoArray(result);
+            renderTodos();
+        } catch (error) {
+            todos = [];
+            todoCount.textContent = "Could not load todos";
+            todoList.replaceChildren(
+                createElement("div", "empty", error.message)
+            );
+            showMessage(error.message, "error");
+        } finally {
+            refreshBtn.disabled = false;
+        }
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const id = todoIdInput.value;
+        const payload = {
+            title: titleInput.value.trim(),
+            description: descriptionInput.value.trim() || null,
+            status: statusInput.value,
+        };
+
+        if (!payload.title) {
+            showMessage("Title is required.", "error");
+            titleInput.focus();
+            return;
+        }
+
+        submitBtn.disabled = true;
+
+        try {
+            if (id) {
+                await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
+                    method: "PUT",
+                    body: JSON.stringify(payload),
+                });
+                showMessage("Todo updated successfully.");
+            } else {
+                await apiRequest(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                });
+                showMessage("Todo created successfully.");
+            }
+
+            resetForm();
+            await loadTodos();
+        } catch (error) {
+            showMessage(error.message, "error");
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+
+    async function updateStatus(id, status, select) {
+        select.disabled = true;
+
+        try {
+            await apiRequest(
+                `${API_URL}/${encodeURIComponent(id)}/status`,
+                {
+                    method: "PATCH",
+                    body: JSON.stringify({ status }),
+                }
+            );
+
+            showMessage("Todo status updated successfully.");
+            await loadTodos();
+        } catch (error) {
+            showMessage(error.message, "error");
+            await loadTodos();
+        } finally {
+            select.disabled = false;
+        }
+    }
+
+    async function deleteTodo(id) {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete Todo #${id}?`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
+                method: "DELETE",
+            });
+
+            if (String(todoIdInput.value) === String(id)) {
+                resetForm();
+            }
+
+            showMessage("Todo deleted successfully.");
+            await loadTodos();
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    }
+
+    cancelBtn.addEventListener("click", resetForm);
+    refreshBtn.addEventListener("click", loadTodos);
+    searchInput.addEventListener("input", renderTodos);
+
+    loadTodos();
+</script>
 </body>
 </html>

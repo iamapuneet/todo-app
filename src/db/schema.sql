@@ -1,6 +1,6 @@
-create database todo_app;
+CREATE DATABASE IF NOT EXISTS todo_app;
 
-use todo;
+use todo_app;
 
 CREATE TABLE IF NOT EXISTS todos (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS todos (
         'in_progress',
         'completed'
     ) NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
 );

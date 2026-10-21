@@ -1,6 +1,8 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import todoRoutes from "./routes/todo.routes.js";
+import * as response from "./utils/api-response.js";
 
 const app = express();
 
@@ -18,6 +20,22 @@ app.get("/", (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server running at http://localhost:3000");
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
+app.use("/api/todos", todoRoutes);
+
+app.use((req, res) => {
+  return response.error(res, "Route not found.", 404);
 });
+
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  if (res.headersSent) return next(err);
+
+  return response.error(res, "Internal server error.", 500);
+});
+
+export default app;
