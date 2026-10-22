@@ -8,6 +8,16 @@ const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const publicDir = path.join(__dirname, "../public");
+
+// Serve static assets with HTTP Cache-Control (1 day cache)
+app.use(
+  express.static(publicDir, {
+    maxAge: "1d",
+    etag: true,
+    lastModified: true,
+  })
+);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));

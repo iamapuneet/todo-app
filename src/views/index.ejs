@@ -1,595 +1,500 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo Manager</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
 
-    <style>
-        :root {
-            color-scheme: dark;
-            --bg: #09090b;
-            --card: #111114;
-            --border: #27272a;
-            --text: #fafafa;
-            --muted: #a1a1aa;
-            --purple: #8b5cf6;
-            --green: #4ade80;
-            --red: #fb7185;
-            --yellow: #fbbf24;
-        }
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-        * { box-sizing: border-box; }
+  <!-- Tailwind CSS v3 Play CDN with shadcn/ui Zinc Theme Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+          },
+          colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: {
+              DEFAULT: "hsl(var(--primary))",
+              foreground: "hsl(var(--primary-foreground))",
+            },
+            secondary: {
+              DEFAULT: "hsl(var(--secondary))",
+              foreground: "hsl(var(--secondary-foreground))",
+            },
+            destructive: {
+              DEFAULT: "hsl(var(--destructive))",
+              foreground: "hsl(var(--destructive-foreground))",
+            },
+            muted: {
+              DEFAULT: "hsl(var(--muted))",
+              foreground: "hsl(var(--muted-foreground))",
+            },
+            accent: {
+              DEFAULT: "hsl(var(--accent))",
+              foreground: "hsl(var(--accent-foreground))",
+            },
+            popover: {
+              DEFAULT: "hsl(var(--popover))",
+              foreground: "hsl(var(--popover-foreground))",
+            },
+            card: {
+              DEFAULT: "hsl(var(--card))",
+              foreground: "hsl(var(--card-foreground))",
+            },
+          },
+          borderRadius: {
+            lg: "var(--radius)",
+            md: "calc(var(--radius) - 2px)",
+            sm: "calc(var(--radius) - 4px)",
+          },
+        },
+      },
+    };
+  </script>
 
-        body {
-            margin: 0;
-            padding: 35px 16px;
-            background: var(--bg);
-            color: var(--text);
-            font-family: Arial, sans-serif;
-        }
+  <!-- Separate CSS Folder -->
+  <link rel="stylesheet" href="/css/app.css" />
 
-        button, input, textarea, select { font: inherit; }
+  <!-- Alpine.js Plugins (Persist + Collapse) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.14.8/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.8/dist/cdn.min.js"></script>
 
-        button { cursor: pointer; }
+  <!-- Alpine.js Core -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 
-        .container { max-width: 900px; margin: auto; }
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-        header { margin-bottom: 28px; }
-
-        header h1 {
-            margin: 0 0 8px;
-            font-size: clamp(28px, 5vw, 38px);
-        }
-
-        header p, .muted { color: var(--muted); }
-
-        .panel {
-            padding: 24px;
-            margin-bottom: 22px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-        }
-
-        .panel h2 { margin: 0 0 20px; font-size: 20px; }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .field { display: grid; gap: 8px; }
-
-        .field.full { grid-column: 1 / -1; }
-
-        label { color: #d4d4d8; font-size: 13px; }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 12px;
-            color: var(--text);
-            background: #09090b;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            outline: none;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--purple);
-        }
-
-        textarea { min-height: 95px; resize: vertical; }
-
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 9px;
-            margin-top: 18px;
-        }
-
-        .btn {
-            padding: 10px 15px;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            background: #202024;
-            color: var(--text);
-        }
-
-        .btn-primary {
-            background: var(--purple);
-            border-color: var(--purple);
-        }
-
-        .btn-danger { color: var(--red); }
-
-        .btn-small { padding: 7px 10px; font-size: 12px; }
-
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        .toolbar h2 { margin: 0; }
-
-        .toolbar input { max-width: 270px; }
-
-        #todoList { display: grid; gap: 13px; }
-
-        .todo {
-            padding: 18px;
-            border: 1px solid var(--border);
-            border-radius: 13px;
-            background: #0d0d10;
-        }
-
-        .todo-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .todo h3 { margin: 0 0 7px; overflow-wrap: anywhere; }
-
-        .todo-description {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
-
-        .status {
-            display: inline-block;
-            margin-top: 12px;
-            padding: 5px 8px;
-            border-radius: 6px;
-            background: #27272a;
-            color: #d4d4d8;
-            font-size: 11px;
-        }
-
-        .status.completed { color: var(--green); }
-        .status.in_progress { color: var(--yellow); }
-
-        .todo-footer {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-top: 16px;
-            padding-top: 13px;
-            border-top: 1px solid var(--border);
-        }
-
-        .todo-footer select { width: auto; max-width: 160px; padding: 8px; }
-
-        .todo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-
-        .message {
-            display: none;
-            margin-bottom: 18px;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            font-size: 14px;
-            overflow-wrap: anywhere;
-        }
-
-        .message.show { display: block; }
-        .message.success { color: var(--green); }
-        .message.error { color: var(--red); }
-
-        .empty, .loading {
-            padding: 35px 10px;
-            color: var(--muted);
-            text-align: center;
-        }
-
-        .meta { color: var(--muted); font-size: 12px; }
-
-        @media (max-width: 600px) {
-            body { padding: 24px 12px; }
-            .panel { padding: 17px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .field.full { grid-column: auto; }
-            .todo-top { flex-direction: column; }
-            .toolbar { align-items: stretch; }
-            .toolbar input { max-width: none; }
-        }
-    </style>
+  <!-- Separate JS Folder -->
+  <script src="/js/app.js"></script>
 </head>
 
-<body>
-<main class="container">
-    <header>
-        <h1>Todo Manager</h1>
-        <p>Create, view, update and delete your tasks using REST APIs.</p>
-    </header>
+<body class="min-h-screen bg-background text-foreground antialiased selection:bg-muted font-sans" x-data="todoApp">
 
-    <div id="message" class="message" role="status" aria-live="polite"></div>
+  <!-- Clean Top Navigation Bar -->
+  <header class="sticky top-0 z-40 w-full border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div class="max-w-3xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
+      
+      <!-- Brand & Clean Task Counter -->
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
+          <i data-lucide="check-square" class="h-4 w-4"></i>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <h1 class="text-sm font-semibold tracking-tight">Tasks</h1>
+          <span 
+            class="text-xs text-muted-foreground font-normal" 
+            x-text="stats.total > 0 ? `${stats.pending} pending, ${stats.completed} completed` : ''">
+          </span>
+        </div>
+      </div>
 
-    <!-- Create / Update Form -->
-    <section class="panel">
-        <h2 id="formHeading">Create Todo</h2>
+      <!-- Header Actions -->
+      <div class="flex items-center gap-2">
+        <button 
+          @click="fetchTodos()" 
+          class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground text-muted-foreground focus-ring transition-colors"
+          title="Refresh tasks">
+          <i data-lucide="rotate-cw" class="h-3.5 w-3.5" :class="{ 'animate-spin': loading }"></i>
+        </button>
 
-        <form id="todoForm">
-            <input type="hidden" id="todoId">
+        <button 
+          @click="isCreateModalOpen = true" 
+          class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow hover:bg-primary/90 focus-ring transition-all active:scale-[0.98]">
+          <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+          <span>New Task</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-            <div class="form-grid">
-                <div class="field full">
-                    <label for="title">Title *</label>
-                    <input
-                        id="title"
-                        name="title"
-                        type="text"
-                        maxlength="255"
-                        placeholder="What do you need to do?"
-                        required
-                    >
-                </div>
+  <!-- Main Container -->
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-                <div class="field full">
-                    <label for="description">Description</label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        placeholder="Add some details (optional)"
-                    ></textarea>
-                </div>
+    <!-- Zero-Friction Quick Add Input Bar -->
+    <section class="relative">
+      <form @submit.prevent="handleQuickAdd()" class="relative flex items-center">
+        <i data-lucide="plus-circle" class="absolute left-3.5 h-4 w-4 text-muted-foreground pointer-events-none"></i>
+        <input 
+          type="text" 
+          x-model="quickTitle" 
+          placeholder="Add a new task... (Press Enter to save)" 
+          maxlength="255" 
+          class="flex h-11 w-full rounded-xl border border-border bg-card pl-10 pr-24 py-2 text-sm shadow-sm transition-all placeholder:text-muted-foreground/70 focus-ring hover:border-zinc-700" />
+        
+        <div class="absolute right-2 flex items-center gap-1.5">
+          <button 
+            type="submit" 
+            :disabled="!quickTitle.trim() || loading" 
+            class="inline-flex h-7 items-center justify-center rounded-md bg-secondary px-2.5 text-xs font-medium text-secondary-foreground hover:bg-accent disabled:opacity-40 transition-colors">
+            Add
+          </button>
+          <button 
+            type="button" 
+            @click="newTodo.title = quickTitle; isCreateModalOpen = true" 
+            class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            title="Add description & status">
+            <i data-lucide="sliders-horizontal" class="h-3.5 w-3.5"></i>
+          </button>
+        </div>
+      </form>
+    </section>
 
-                <div class="field">
-                    <label for="status">Status</label>
-                    <select id="status" name="status">
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                </div>
-            </div>
+    <!-- Filter Tabs & Search Controls -->
+    <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+      
+      <!-- Filter Tabs -->
+      <div class="inline-flex h-9 items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground border border-border">
+        
+        <button 
+          @click="activeFilter = 'all'" 
+          :class="activeFilter === 'all' ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all">
+          <span>All</span>
+          <span class="ml-1.5 text-[10px] opacity-75" x-text="stats.total"></span>
+        </button>
 
-            <div class="actions">
-                <button class="btn btn-primary" id="submitBtn" type="submit">
-                    Create Todo
+        <button 
+          @click="activeFilter = 'pending'" 
+          :class="activeFilter === 'pending' ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all">
+          <span>Pending</span>
+          <span class="ml-1.5 text-[10px] text-amber-400" x-text="stats.pending"></span>
+        </button>
+
+        <button 
+          @click="activeFilter = 'in_progress'" 
+          :class="activeFilter === 'in_progress' ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all">
+          <span>In Progress</span>
+          <span class="ml-1.5 text-[10px] text-blue-400" x-text="stats.inProgress"></span>
+        </button>
+
+        <button 
+          @click="activeFilter = 'completed'" 
+          :class="activeFilter === 'completed' ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all">
+          <span>Completed</span>
+          <span class="ml-1.5 text-[10px] text-emerald-400" x-text="stats.completed"></span>
+        </button>
+      </div>
+
+      <!-- Search & Sort -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1 sm:w-48">
+          <i data-lucide="search" class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none"></i>
+          <input 
+            type="text" 
+            x-model="searchQuery" 
+            placeholder="Search..." 
+            class="flex h-8 w-full rounded-md border border-input bg-background pl-8 pr-7 py-1 text-xs shadow-sm placeholder:text-muted-foreground focus-ring" />
+          <button 
+            x-show="searchQuery.length > 0" 
+            @click="searchQuery = ''" 
+            class="absolute right-2 top-2 text-muted-foreground hover:text-foreground">
+            <i data-lucide="x" class="h-3 w-3"></i>
+          </button>
+        </div>
+
+        <select 
+          x-model="sortOrder" 
+          class="h-8 rounded-md border border-input bg-background px-2.5 py-1 text-xs shadow-sm focus-ring text-muted-foreground">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="title">A-Z</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Task List -->
+    <section class="space-y-2.5">
+      
+      <!-- Empty State -->
+      <div 
+        x-show="filteredTodos.length === 0" 
+        x-cloak 
+        class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 px-4 text-center bg-card/20">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground mb-2.5">
+          <i data-lucide="inbox" class="h-5 w-5"></i>
+        </div>
+        <p class="text-xs text-muted-foreground">
+          <span x-show="searchQuery">No tasks match your search.</span>
+          <span x-show="!searchQuery && activeFilter !== 'all'">No tasks in this category.</span>
+          <span x-show="!searchQuery && activeFilter === 'all'">No tasks yet. Add one above!</span>
+        </p>
+      </div>
+
+      <!-- Task Items -->
+      <template x-for="todo in filteredTodos" :key="todo.id">
+        <div 
+          class="group flex items-start sm:items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-sm hover:border-zinc-700 transition-all">
+          
+          <!-- Left: Checkbox Toggle + Content -->
+          <div class="flex items-start gap-3 flex-1 min-w-0">
+            
+            <!-- Circular Toggle Button -->
+            <button 
+              @click="toggleStatus(todo)" 
+              class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors focus-ring"
+              :class="{
+                'border-emerald-500 bg-emerald-500/20 text-emerald-400': todo.status === 'completed',
+                'border-blue-500 bg-blue-500/20 text-blue-400': todo.status === 'in_progress',
+                'border-border hover:border-zinc-500 text-transparent': todo.status === 'pending'
+              }"
+              :title="`Status: ${formatStatus(todo.status)} (click to change)`">
+              <i data-lucide="check" class="h-2.5 w-2.5" :class="{ 'opacity-100': todo.status === 'completed', 'opacity-0': todo.status !== 'completed' }"></i>
+            </button>
+
+            <!-- Title & Details -->
+            <div class="space-y-0.5 min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span 
+                  class="text-sm font-medium tracking-tight truncate max-w-sm sm:max-w-md"
+                  :class="{ 'line-through text-muted-foreground': todo.status === 'completed' }"
+                  x-text="todo.title">
+                </span>
+
+                <!-- Status Pill -->
+                <button 
+                  @click="toggleStatus(todo)"
+                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border hover:opacity-80 transition-opacity"
+                  :class="{
+                    'bg-amber-500/10 text-amber-400 border-amber-500/20': todo.status === 'pending',
+                    'bg-blue-500/10 text-blue-400 border-blue-500/20': todo.status === 'in_progress',
+                    'bg-emerald-500/10 text-emerald-400 border-emerald-500/20': todo.status === 'completed'
+                  }">
+                  <span class="h-1.5 w-1.5 rounded-full" :class="{
+                    'bg-amber-400': todo.status === 'pending',
+                    'bg-blue-400': todo.status === 'in_progress',
+                    'bg-emerald-400': todo.status === 'completed'
+                  }"></span>
+                  <span x-text="formatStatus(todo.status)"></span>
                 </button>
-                <button class="btn" id="cancelBtn" type="button" hidden>
-                    Cancel Edit
-                </button>
+              </div>
+
+              <!-- Optional Description -->
+              <p 
+                x-show="todo.description" 
+                class="text-xs text-muted-foreground/80 line-clamp-1 whitespace-pre-line"
+                x-text="todo.description">
+              </p>
             </div>
+          </div>
+
+          <!-- Right: Action Buttons -->
+          <div class="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+            <button 
+              @click="openEditModal(todo)" 
+              class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              title="Edit">
+              <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+            </button>
+
+            <button 
+              @click="handleDeleteTodo(todo.id)" 
+              class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-destructive/20 hover:text-destructive text-muted-foreground transition-colors"
+              title="Delete">
+              <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- Clean Simple Footer -->
+    <footer class="pt-4 text-center text-[11px] text-muted-foreground/60">
+      <span>Tip: Click any status badge or circle to toggle progress</span>
+    </footer>
+  </main>
+
+  <!-- Create Task Modal Dialog -->
+  <div 
+    x-show="isCreateModalOpen" 
+    x-cloak 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    
+    <div 
+      x-show="isCreateModalOpen" 
+      @click="isCreateModalOpen = false" 
+      class="fixed inset-0 bg-black/80 backdrop-blur-sm">
+    </div>
+
+    <div 
+      x-show="isCreateModalOpen" 
+      class="relative w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-2xl space-y-4 z-10">
+      
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold">New Task</h3>
+        <button 
+          @click="isCreateModalOpen = false" 
+          class="rounded-md p-1 text-muted-foreground hover:text-foreground focus-ring">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <form @submit.prevent="handleCreateTodo()" class="space-y-3.5">
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-foreground">Title</label>
+          <input 
+            type="text" 
+            x-model="newTodo.title" 
+            placeholder="Task title" 
+            maxlength="255" 
+            required 
+            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus-ring shadow-sm" />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-foreground">Description <span class="text-muted-foreground font-normal">(optional)</span></label>
+          <textarea 
+            x-model="newTodo.description" 
+            rows="3" 
+            placeholder="Notes or details..." 
+            class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-ring shadow-sm"></textarea>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-foreground">Status</label>
+          <select 
+            x-model="newTodo.status" 
+            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus-ring shadow-sm text-foreground">
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button 
+            type="button" 
+            @click="isCreateModalOpen = false" 
+            class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent focus-ring">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            :disabled="loading || !newTodo.title.trim()" 
+            class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow hover:bg-primary/90 focus-ring disabled:opacity-50">
+            <span x-text="loading ? 'Saving...' : 'Save Task'"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Task Modal Dialog -->
+  <div 
+    x-show="isEditModalOpen" 
+    x-cloak 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    
+    <div 
+      x-show="isEditModalOpen" 
+      @click="isEditModalOpen = false" 
+      class="fixed inset-0 bg-black/80 backdrop-blur-sm">
+    </div>
+
+    <div 
+      x-show="isEditModalOpen" 
+      class="relative w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-2xl space-y-4 z-10">
+      
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold">Edit Task</h3>
+        <button 
+          @click="isEditModalOpen = false" 
+          class="rounded-md p-1 text-muted-foreground hover:text-foreground focus-ring">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <template x-if="editingTodo">
+        <form @submit.prevent="handleUpdateTodo()" class="space-y-3.5">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">Title</label>
+            <input 
+              type="text" 
+              x-model="editingTodo.title" 
+              maxlength="255" 
+              required 
+              class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus-ring shadow-sm" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">Description</label>
+            <textarea 
+              x-model="editingTodo.description" 
+              rows="3" 
+              class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-ring shadow-sm"></textarea>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">Status</label>
+            <select 
+              x-model="editingTodo.status" 
+              class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus-ring shadow-sm text-foreground">
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button 
+              type="button" 
+              @click="isEditModalOpen = false" 
+              class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent focus-ring">
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              :disabled="loading || !editingTodo.title.trim()" 
+              class="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow hover:bg-primary/90 focus-ring disabled:opacity-50">
+              <span x-text="loading ? 'Updating...' : 'Save Changes'"></span>
+            </button>
+          </div>
         </form>
-    </section>
+      </template>
+    </div>
+  </div>
 
-    <!-- Read Todos -->
-    <section class="panel">
-        <div class="toolbar">
-            <h2>Your Todos</h2>
-            <input id="search" type="search" placeholder="Search loaded todos...">
-        </div>
+  <!-- Toast Stack -->
+  <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs pointer-events-none">
+    <template x-for="t in toasts" :key="t.id">
+      <div 
+        x-transition:enter="ease-out duration-200" 
+        x-transition:enter-start="opacity-0 translate-y-2 scale-95" 
+        x-transition:enter-end="opacity-100 translate-y-0 scale-100" 
+        x-transition:leave="ease-in duration-150" 
+        x-transition:leave-start="opacity-100 translate-y-0 scale-100" 
+        x-transition:leave-end="opacity-0 translate-y-1 scale-95" 
+        class="pointer-events-auto flex items-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2.5 shadow-lg text-xs text-foreground">
+        
+        <i 
+          :data-lucide="t.type === 'success' ? 'check-circle-2' : (t.type === 'error' ? 'alert-triangle' : 'info')" 
+          class="h-3.5 w-3.5 shrink-0" 
+          :class="{
+            'text-emerald-400': t.type === 'success',
+            'text-rose-400': t.type === 'error',
+            'text-blue-400': t.type === 'info'
+          }"></i>
+        
+        <span class="flex-1 font-medium" x-text="t.message"></span>
+      </div>
+    </template>
+  </div>
 
-        <div class="toolbar">
-            <span id="todoCount" class="meta">Loading todos...</span>
-            <button class="btn" id="refreshBtn" type="button">↻ Refresh</button>
-        </div>
-
-        <div id="todoList">
-            <div class="loading">Loading todos...</div>
-        </div>
-    </section>
-</main>
-
-<script>
-    const API_URL = "/api/todos";
-
-    const form = document.getElementById("todoForm");
-    const todoIdInput = document.getElementById("todoId");
-    const titleInput = document.getElementById("title");
-    const descriptionInput = document.getElementById("description");
-    const statusInput = document.getElementById("status");
-    const submitBtn = document.getElementById("submitBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const formHeading = document.getElementById("formHeading");
-    const todoList = document.getElementById("todoList");
-    const todoCount = document.getElementById("todoCount");
-    const searchInput = document.getElementById("search");
-    const messageBox = document.getElementById("message");
-    const refreshBtn = document.getElementById("refreshBtn");
-
-    let todos = [];
-    let messageTimer;
-
-    function showMessage(text, type = "success") {
-        clearTimeout(messageTimer);
-        messageBox.textContent = text;
-        messageBox.className = `message show ${type}`;
-
-        messageTimer = setTimeout(() => {
-            messageBox.className = "message";
-        }, 4000);
-    }
-
-    async function apiRequest(url, options = {}) {
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                ...(options.body ? { "Content-Type": "application/json" } : {}),
-                ...options.headers,
-            },
-        });
-
-        const text = await response.text();
-        let result = {};
-
-        if (text) {
-            try {
-                result = JSON.parse(text);
-            } catch {
-                throw new Error("Server returned an invalid response.");
-            }
-        }
-
-        if (!response.ok || result.success === false) {
-            throw new Error(result.message || `Request failed (${response.status}).`);
-        }
-
-        return result;
-    }
-
-    function getTodoArray(result) {
-        // Supports either { success, data: [...] } or a direct array.
-        if (Array.isArray(result)) return result;
-        if (Array.isArray(result.data)) return result.data;
-
-        // Supports { data: { todos: [...] } } response structures too.
-        if (Array.isArray(result.data?.todos)) return result.data.todos;
-
-        throw new Error(
-            "Unexpected todos response. Check the GET /api/todos response format."
-        );
-    }
-
-    function resetForm() {
-        form.reset();
-        todoIdInput.value = "";
-        statusInput.value = "pending";
-        formHeading.textContent = "Create Todo";
-        submitBtn.textContent = "Create Todo";
-        cancelBtn.hidden = true;
-    }
-
-    function editTodo(id) {
-        const todo = todos.find((item) => String(item.id) === String(id));
-
-        if (!todo) {
-            showMessage("Todo not found in the loaded list. Refresh and try again.", "error");
-            return;
-        }
-
-        todoIdInput.value = todo.id;
-        titleInput.value = todo.title ?? "";
-        descriptionInput.value = todo.description ?? "";
-        statusInput.value = todo.status ?? "pending";
-
-        formHeading.textContent = "Update Todo";
-        submitBtn.textContent = "Save Changes";
-        cancelBtn.hidden = false;
-
-        form.scrollIntoView({ behavior: "smooth", block: "start" });
-        titleInput.focus({ preventScroll: true });
-    }
-
-    function createElement(tag, className, text) {
-        const element = document.createElement(tag);
-        if (className) element.className = className;
-        if (text !== undefined) element.textContent = text;
-        return element;
-    }
-
-    function renderTodos() {
-        const query = searchInput.value.trim().toLowerCase();
-
-        const filtered = todos.filter((todo) => {
-            const text = `${todo.title ?? ""} ${todo.description ?? ""}`.toLowerCase();
-            return text.includes(query);
-        });
-
-        todoCount.textContent =
-            `${filtered.length} todo${filtered.length === 1 ? "" : "s"}` +
-            (query ? " found" : "");
-
-        todoList.replaceChildren();
-
-        if (filtered.length === 0) {
-            todoList.appendChild(
-                createElement(
-                    "div",
-                    "empty",
-                    query ? "No matching todos found." : "No todos yet. Create your first task above."
-                )
-            );
-            return;
-        }
-
-        for (const todo of filtered) {
-            const card = createElement("article", "todo");
-            const top = createElement("div", "todo-top");
-            const content = createElement("div");
-            const title = createElement("h3", "", todo.title);
-            const description = createElement(
-                "p",
-                "todo-description",
-                todo.description || "No description"
-            );
-
-            const status = createElement(
-                "span",
-                `status ${todo.status === "completed" ? "completed" : todo.status === "in_progress" ? "in_progress" : ""}`,
-                (todo.status || "pending").replaceAll("_", " ")
-            );
-
-            title.id = `todo-title-${todo.id}`;
-            content.append(title, description, status);
-
-            const idLabel = createElement("span", "meta", `ID: ${todo.id}`);
-            top.append(content, idLabel);
-
-            const footer = createElement("div", "todo-footer");
-            const statusSelect = document.createElement("select");
-            statusSelect.setAttribute("aria-label", `Change status for todo ${todo.id}`);
-
-            for (const [value, label] of [
-                ["pending", "Pending"],
-                ["in_progress", "In Progress"],
-                ["completed", "Completed"],
-            ]) {
-                const option = document.createElement("option");
-                option.value = value;
-                option.textContent = label;
-                option.selected = (todo.status || "pending") === value;
-                statusSelect.appendChild(option);
-            }
-
-            statusSelect.addEventListener("change", () => {
-                updateStatus(todo.id, statusSelect.value, statusSelect);
-            });
-
-            const actions = createElement("div", "todo-actions");
-
-            const editBtn = createElement("button", "btn btn-small", "Edit");
-            editBtn.type = "button";
-            editBtn.addEventListener("click", () => editTodo(todo.id));
-
-            const deleteBtn = createElement("button", "btn btn-small btn-danger", "Delete");
-            deleteBtn.type = "button";
-            deleteBtn.addEventListener("click", () => deleteTodo(todo.id));
-
-            actions.append(editBtn, deleteBtn);
-            footer.append(statusSelect, actions);
-            card.append(top, footer);
-            todoList.appendChild(card);
-        }
-    }
-
-    async function loadTodos() {
-        refreshBtn.disabled = true;
-        todoCount.textContent = "Loading todos...";
-        todoList.replaceChildren(createElement("div", "loading", "Loading todos..."));
-
-        try {
-            const result = await apiRequest(API_URL);
-            todos = getTodoArray(result);
-            renderTodos();
-        } catch (error) {
-            todos = [];
-            todoCount.textContent = "Could not load todos";
-            todoList.replaceChildren(
-                createElement("div", "empty", error.message)
-            );
-            showMessage(error.message, "error");
-        } finally {
-            refreshBtn.disabled = false;
-        }
-    }
-
-    form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        const id = todoIdInput.value;
-        const payload = {
-            title: titleInput.value.trim(),
-            description: descriptionInput.value.trim() || null,
-            status: statusInput.value,
-        };
-
-        if (!payload.title) {
-            showMessage("Title is required.", "error");
-            titleInput.focus();
-            return;
-        }
-
-        submitBtn.disabled = true;
-
-        try {
-            if (id) {
-                await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
-                    method: "PUT",
-                    body: JSON.stringify(payload),
-                });
-                showMessage("Todo updated successfully.");
-            } else {
-                await apiRequest(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                });
-                showMessage("Todo created successfully.");
-            }
-
-            resetForm();
-            await loadTodos();
-        } catch (error) {
-            showMessage(error.message, "error");
-        } finally {
-            submitBtn.disabled = false;
-        }
-    });
-
-    async function updateStatus(id, status, select) {
-        select.disabled = true;
-
-        try {
-            await apiRequest(
-                `${API_URL}/${encodeURIComponent(id)}/status`,
-                {
-                    method: "PATCH",
-                    body: JSON.stringify({ status }),
-                }
-            );
-
-            showMessage("Todo status updated successfully.");
-            await loadTodos();
-        } catch (error) {
-            showMessage(error.message, "error");
-            await loadTodos();
-        } finally {
-            select.disabled = false;
-        }
-    }
-
-    async function deleteTodo(id) {
-        const confirmed = window.confirm(
-            `Are you sure you want to delete Todo #${id}?`
-        );
-
-        if (!confirmed) return;
-
-        try {
-            await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
-                method: "DELETE",
-            });
-
-            if (String(todoIdInput.value) === String(id)) {
-                resetForm();
-            }
-
-            showMessage("Todo deleted successfully.");
-            await loadTodos();
-        } catch (error) {
-            showMessage(error.message, "error");
-        }
-    }
-
-    cancelBtn.addEventListener("click", resetForm);
-    refreshBtn.addEventListener("click", loadTodos);
-    searchInput.addEventListener("input", renderTodos);
-
-    loadTodos();
-</script>
 </body>
 </html>
