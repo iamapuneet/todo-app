@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= title %></title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" href="/favicon.svg" />
 
   <!-- Google Font: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -124,34 +126,7 @@
   <!-- Main Container -->
   <main class="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-    <!-- Zero-Friction Quick Add Input Bar -->
-    <section class="relative">
-      <form @submit.prevent="handleQuickAdd()" class="relative flex items-center">
-        <i data-lucide="plus-circle" class="absolute left-3.5 h-4 w-4 text-muted-foreground pointer-events-none"></i>
-        <input 
-          type="text" 
-          x-model="quickTitle" 
-          placeholder="Add a new task... (Press Enter to save)" 
-          maxlength="255" 
-          class="flex h-11 w-full rounded-xl border border-border bg-card pl-10 pr-24 py-2 text-sm shadow-sm transition-all placeholder:text-muted-foreground/70 focus-ring hover:border-zinc-700" />
-        
-        <div class="absolute right-2 flex items-center gap-1.5">
-          <button 
-            type="submit" 
-            :disabled="!quickTitle.trim() || loading" 
-            class="inline-flex h-7 items-center justify-center rounded-md bg-secondary px-2.5 text-xs font-medium text-secondary-foreground hover:bg-accent disabled:opacity-40 transition-colors">
-            Add
-          </button>
-          <button 
-            type="button" 
-            @click="newTodo.title = quickTitle; isCreateModalOpen = true" 
-            class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            title="Add description & status">
-            <i data-lucide="sliders-horizontal" class="h-3.5 w-3.5"></i>
-          </button>
-        </div>
-      </form>
-    </section>
+
 
     <!-- Filter Tabs & Search Controls -->
     <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
@@ -304,7 +279,7 @@
             </button>
 
             <button 
-              @click="handleDeleteTodo(todo.id)" 
+              @click="openDeleteModal(todo)" 
               class="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-destructive/20 hover:text-destructive text-muted-foreground transition-colors"
               title="Delete">
               <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
@@ -467,6 +442,67 @@
           </div>
         </form>
       </template>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal Dialog (shadcn/ui AlertDialog style) -->
+  <div 
+    x-show="isDeleteModalOpen" 
+    x-cloak 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    
+    <!-- Backdrop Blur -->
+    <div 
+      x-show="isDeleteModalOpen" 
+      x-transition:enter="ease-out duration-200" 
+      x-transition:enter-start="opacity-0" 
+      x-transition:enter-end="opacity-100" 
+      x-transition:leave="ease-in duration-150" 
+      x-transition:leave-start="opacity-100" 
+      x-transition:leave-end="opacity-0" 
+      @click="isDeleteModalOpen = false; deletingTodo = null" 
+      class="fixed inset-0 bg-black/80 backdrop-blur-sm">
+    </div>
+
+    <!-- Alert Dialog Card -->
+    <div 
+      x-show="isDeleteModalOpen" 
+      x-transition:enter="ease-out duration-200" 
+      x-transition:enter-start="opacity-0 scale-95" 
+      x-transition:enter-end="opacity-100 scale-100" 
+      x-transition:leave="ease-in duration-150" 
+      x-transition:leave-start="opacity-100 scale-100" 
+      x-transition:leave-end="opacity-0 scale-95" 
+      class="relative w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-2xl space-y-4 z-10">
+      
+      <div class="flex items-start gap-3">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+          <i data-lucide="alert-triangle" class="h-4 w-4"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-sm font-semibold tracking-tight">Delete Task</h3>
+          <p class="text-xs text-muted-foreground">
+            Are you sure you want to delete <span class="font-medium text-foreground" x-text="deletingTodo ? `\"${deletingTodo.title}\"` : 'this task'"></span>? This action cannot be undone.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button 
+          type="button" 
+          @click="isDeleteModalOpen = false; deletingTodo = null" 
+          class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent text-foreground focus-ring transition-colors">
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          @click="confirmDelete()" 
+          :disabled="loading" 
+          class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-destructive px-3.5 text-xs font-medium text-destructive-foreground shadow hover:bg-destructive/90 focus-ring disabled:opacity-50 transition-all">
+          <i data-lucide="trash-2" class="h-3 w-3"></i>
+          <span x-text="loading ? 'Deleting...' : 'Delete'"></span>
+        </button>
+      </div>
     </div>
   </div>
 

@@ -15,9 +15,6 @@ document.addEventListener("alpine:init", () => {
     activeFilter: Alpine.$persist("all").as("todo_ui_filter"),
     sortOrder: Alpine.$persist("newest").as("todo_ui_sort"),
 
-    // Quick add input state
-    quickTitle: "",
-
     // Draft persistence in UI Cache (User typing is never lost)
     newTodo: {
       title: Alpine.$persist("").as("todo_ui_draft_title"),
@@ -25,10 +22,12 @@ document.addEventListener("alpine:init", () => {
       status: "pending",
     },
 
-    // Edit Modal State
+    // Modal States
     editingTodo: null,
     isCreateModalOpen: false,
     isEditModalOpen: false,
+    isDeleteModalOpen: false,
+    deletingTodo: null,
 
     // Toast Notification System
     toasts: [],
@@ -91,39 +90,7 @@ document.addEventListener("alpine:init", () => {
       }
     },
 
-    // Quick Add directly from top input bar
-    async handleQuickAdd() {
-      const title = this.quickTitle.trim();
-      if (!title) return;
-
-      this.loading = true;
-      try {
-        const res = await fetch("/api/todos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title,
-            status: "pending",
-          }),
-        });
-
-        const json = await res.json();
-
-        if (json.success) {
-          this.quickTitle = "";
-          this.showToast("Task added!", "success");
-          await this.fetchTodos();
-        } else {
-          this.showToast(json.message || "Failed to add task.", "error");
-        }
-      } catch (err) {
-        this.showToast("Network error while adding task.", "error");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // Create a new task with full modal dialog
+    // Create a new task with full modal dialog (Only adds to DB when confirmed in popup)
     async handleCreateTodo() {
       const title = this.newTodo.title.trim();
       if (!title) {
@@ -247,10 +214,17 @@ document.addEventListener("alpine:init", () => {
       }
     },
 
-    // Delete task
-    async handleDeleteTodo(id) {
-      if (!confirm("Are you sure you want to delete this task?")) return;
+    // Open Delete Confirmation Modal (shadcn/ui style, no native alert)
+    openDeleteModal(todo) {
+      this.deletingTodo = todo;
+      this.isDeleteModalOpen = true;
+    },
 
+    // Confirm and execute task deletion
+    async confirmDelete() {
+      if (!this.deletingTodo) return;
+
+      const id = this.deletingTodo.id;
       this.loading = true;
       try {
         const res = await fetch(`/api/todos/${id}`, {
@@ -260,6 +234,8 @@ document.addEventListener("alpine:init", () => {
         const json = await res.json();
 
         if (json.success) {
+          this.isDeleteModalOpen = false;
+          this.deletingTodo = null;
           this.showToast("Task deleted successfully.", "success");
           await this.fetchTodos();
         } else {
