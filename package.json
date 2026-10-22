@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
+    "screens": "node capture_screens.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,5 +18,8 @@
     "ejs": "^7.0.2",
     "express": "^5.3.0",
     "mysql2": "^3.24.6"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.16.0"
   }
 }

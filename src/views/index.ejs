@@ -491,7 +491,7 @@
         <div class="space-y-1">
           <h3 class="text-sm font-semibold tracking-tight">Delete Task</h3>
           <p class="text-xs text-muted-foreground">
-            Are you sure you want to delete <span class="font-medium text-foreground" x-text="deletingTodo ? `\"${deletingTodo.title}\"` : 'this task'"></span>? This action cannot be undone.
+            Are you sure you want to delete <span class="font-medium text-foreground" x-text="deletingTodo ? ('&quot;' + deletingTodo.title + '&quot;') : 'this task'"></span>? This action cannot be undone.
           </p>
         </div>
       </div>
