@@ -43,7 +43,7 @@ export const update = async (id, fields) => {
   const values = keys.map((key) => fields[key]);
 
   await db.execute(
-    `UPDATE todos SET ${setClause} WHERE id = ?`,
+    `UPDATE todos SET ${setClause}, \`updated_at\` = NOW() WHERE id = ?`,
     [...values, id]
   );
 

@@ -319,6 +319,12 @@ document.addEventListener("alpine:init", () => {
       });
     },
 
+    // Helper: Check if task was modified after creation
+    isModified(todo) {
+      if (!todo.updated_at || !todo.created_at) return false;
+      return new Date(todo.updated_at).getTime() - new Date(todo.created_at).getTime() > 1000;
+    },
+
     // Show floating toast alert
     showToast(message, type = "info") {
       const id = Date.now() + Math.random();

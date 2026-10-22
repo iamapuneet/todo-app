@@ -266,6 +266,15 @@
                 class="text-xs text-muted-foreground/80 line-clamp-1 whitespace-pre-line"
                 x-text="todo.description">
               </p>
+
+              <!-- Timestamps: Created & Updated -->
+              <div class="flex items-center gap-2 text-[11px] text-muted-foreground/60 pt-0.5">
+                <span x-text="`Created: ${formatDate(todo.created_at)}`"></span>
+                <span x-show="isModified(todo)" class="flex items-center gap-1.5 text-muted-foreground/80">
+                  <span>•</span>
+                  <span x-text="`Updated: ${formatDate(todo.updated_at)}`"></span>
+                </span>
+              </div>
             </div>
           </div>
 
