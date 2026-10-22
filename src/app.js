@@ -15,7 +15,6 @@ app.set("views", path.join(__dirname, "views"));
 app.get("/", (req, res) => {
   res.render("index", {
     title: "Todo App",
-    username: "Hazrat",
     message: "Welcome to my Todo App"
   });
 });
